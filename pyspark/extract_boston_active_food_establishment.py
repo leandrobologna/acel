@@ -3,7 +3,7 @@
 
 """
 Description:
-Script de extração dos dados de inspeções dos estabelecimentos de comida da
+Script de extração dos dados de licenças ativas dos estabelecimentos de comida da
 cidade de Boston (USA).
 
 Fonte:

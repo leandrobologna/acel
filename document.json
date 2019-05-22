@@ -1,0 +1,8 @@
+{
+  "name":"mba-personal-education-project",
+  "dailyLimit": 5000,
+  "remaining": 4999,
+  "apiHost": "https://api.yelp.com/v3",
+  "client": "a7PM35qSYgMyKQGIFF0_Kw",
+  "key": "WvrbThxlCquOeLwksdTMcfa8JevpuZc7pb6Ta33dWiF-FQOVBLTnCXxbUBIMqdqV9h1QSJcc4VokaA5YACMD55eq31HRP0IdTSkhqSBNIsKTRh8LQnRUBrBQR6DlXHYx"
+}
