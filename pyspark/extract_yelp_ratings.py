@@ -14,6 +14,7 @@ from pyspark import SparkConf
 from pyspark.sql import SparkSession
 
 from json import load
+from requests import get
 
 # Inicializando a sessão
 spark = SparkSession \
