@@ -33,3 +33,5 @@ with open('/home/leandro/Documentos/pessoal/fia/acel_consulting/document.json') 
 api_host = json_file['apiHost']
 api_client = json_file['client']
 api_key = json_file['key']
+
+location = "Boston, MA"
