@@ -15,11 +15,12 @@ from pyspark import SparkConf
 from pyspark.sql import SparkSession, Row
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 from pyspark.sql.functions import to_timestamp
-
+hdfs
 from requests import get
 
 # Definindo as constantes
 url = "https://data.boston.gov/datastore/odata3.0/4582bec6-2b4f-4f9e-bc55-cbaa73117f4c?$top=5&$format=json"
+hdfs = "hdfs://elephant:8020/user/labdata/boston_food_establishment_inspections"
 
 # Inicializando a sessão do spark
 spark = SparkSession \
@@ -84,5 +85,5 @@ df = df.repartition(10)
 df\
     .write\
     .mode("overwrite")\
-    .option("path","hdfs://elephant:8020/user/labdata/extract_boston_food_establishment_inspections")\
+    .option("path",hdfs)\
     .saveAsTable("extract_boston_food_establishment_inspections")

@@ -18,7 +18,8 @@ from pyspark.sql.functions import to_timestamp
 from requests import get
 
 # Definindo as constantes
-url = 'https://data.boston.gov/datastore/odata3.0/f1e13724-284d-478c-b8bc-ef042aa5b70b?$format=json'
+url = "https://data.boston.gov/datastore/odata3.0/f1e13724-284d-478c-b8bc-ef042aa5b70b?$format=json"
+hdfs = "hdfs://elephant:8020/user/labdata/boston_active_food_establishment"
 
 # Inicializando a sessão do spark
 spark = SparkSession \
@@ -64,5 +65,5 @@ df = df.repartition(10)
 df \
 	.write\
 	.mode("overwrite")\
-	.option("path","hdfs://elephant:8020/user/labdata/boston_active_food_establishment")\
+	.option("path", hdfs)\
 	.saveAsTable("boston_active_food_establishment")
