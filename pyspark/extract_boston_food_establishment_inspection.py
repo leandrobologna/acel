@@ -68,7 +68,7 @@ response = get(url)
 json_data = response.json()
 
 # Criando um dataframe a partir do JSON
-df = sqlContext.createDataFrame(json_data['value'], schema)
+df = spark.createDataFrame(json_data['value'], schema)
 
 # Alterando os campos de datas para timestamp
 df = df\
@@ -84,4 +84,5 @@ df = df.repartition(10)
 df\
     .write\
     .mode("overwrite")\
+    .option("path","hdfs://elephant:8020/user/labdata/extract_boston_food_establishment_inspections")\
     .saveAsTable("extract_boston_food_establishment_inspections")

@@ -19,15 +19,14 @@ from requests import get
 
 # Definindo as constantes
 url = 'https://data.boston.gov/datastore/odata3.0/f1e13724-284d-478c-b8bc-ef042aa5b70b?$format=json'
+
 # Inicializando a sessão do spark
 spark = SparkSession \
-    .builder\
-    .config(conf=SparkConf())\
-    .appName('extract_boston_active_food_establishment')\
-    .getOrCreate()
-
+   	.builder\
+   	.config(conf=SparkConf())\
+   	.appName('extract_boston_active_food_establishment')\
+   	.getOrCreate()
 spark.sparkContext.setLogLevel('ERROR')
-
 # Definindo a estrutura final dos dados (pensar em uma forma dinâmica)
 schema = StructType([
     StructField('_id', IntegerType(), True),
@@ -45,7 +44,6 @@ schema = StructType([
     StructField('CITY', StringType(), True),
     StructField('ZIP', StringType(), True)
 ])
-
 # Conectando a url onde os dados estão disponíveis
 response = get(url)
 
@@ -53,7 +51,7 @@ response = get(url)
 json_data = response.json()
 
 # Criando um dataframe a partir do JSON
-df = sqlContext.createDataFrame(json_data['value'], schema)
+df = spark.createDataFrame(json_data['value'], schema)
 
 # Alterando os campos de datas para timestamp
 df = df\
@@ -63,7 +61,8 @@ df = df\
 df = df.repartition(10)
 
 # Gravar os dados no HDFS
-df\
-    .write\
-    .mode("overwrite")\
-    .saveAsTable("extract_boston_active_food_establishment")
+df \
+	.write\
+	.mode("overwrite")\
+	.option("path","hdfs://elephant:8020/user/labdata/boston_active_food_establishment")\
+	.saveAsTable("boston_active_food_establishment")
