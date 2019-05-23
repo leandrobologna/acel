@@ -26,7 +26,7 @@ spark = SparkSession \
 spark.sparkContext.setLogLevel('ERROR')
 
 # Lendo o arquivo JSON com os metadados da API do yelp
-with open('/home/leandro/Documentos/pessoal/fia/acel_consulting/document.json') as json_file:
+with open('/home/labdata/acel_consulting/document.json') as json_file:
     json_file = load(json_file)
 
 # Instanciando as contantes
@@ -35,3 +35,7 @@ api_client = json_file['client']
 api_key = json_file['key']
 
 location = "Boston, MA"
+
+# Carregando os dataframes
+active_establishment = spark.read.parquet("hdfs://elephant:8020/user/labdata/extract_boston_active_food_establishment")
+
