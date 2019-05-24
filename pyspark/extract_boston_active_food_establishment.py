@@ -32,7 +32,7 @@ spark = SparkSession \
 spark.sparkContext.setLogLevel('ERROR')
 
 # Read tables
-df_empty = spark.read.parquet(local + 'boston_active_food_establishment')
+#df_empty = spark.read.parquet(local + 'boston_active_food_establishment')
 
 # Definindo a estrutura final dos dados (pensar em uma forma dinâmica)
 schema = StructType([
@@ -51,6 +51,8 @@ schema = StructType([
     StructField('CITY', StringType(), True),
     StructField('ZIP', StringType(), True)
 ])
+
+df_empty = spark.createDataFrame([], schema)
 
 # Carregando os metadados da API
 metadados_json = get(url).json()
@@ -88,14 +90,14 @@ df = df_empty\
 df = df.repartition(10)
 
 # Gravar os dados no HDFS
-# df \
-# 	.write\
-# 	.mode("overwrite")\
-# 	.option("path", hdfs + 'boston_active_food_establishment')\
-# 	.saveAsTable("boston_active_food_establishment")
+ df \
+ 	.write\
+ 	.mode("overwrite")\
+ 	.option("path", hdfs + 'boston_active_food_establishment')\
+ 	.saveAsTable("boston_active_food_establishment")
 
-df\
-    .write\
-    .mode("overwrite")\
-    .option("path",local + 'boston_active_food_establishment')\
-    .saveAsTable("boston_active_food_establishment")
+#df\
+#    .write\
+#    .mode("overwrite")\
+#    .option("path",local + 'boston_active_food_establishment')\
+#    .saveAsTable("boston_active_food_establishment")
