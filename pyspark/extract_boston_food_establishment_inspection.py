@@ -7,19 +7,19 @@ Script de extração dos dados de inspeções dos estabelecimentos de comida da
 cidade de Boston (USA).
 
 Fonte:
-https://data.boston.gov/dataset/food-establishment-inspections/resource/4582bec6-2b4f-4f9e-bc55-cbaa73117f4c
+https://data.boston.gov/dataset/food-establishment-inspections
 """
 
 # Importando os pacotes
 from pyspark import SparkConf
 from pyspark.sql import SparkSession, Row
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType
-from pyspark.sql.functions import to_timestamp
-hdfs
+from pyspark.sql.functions import to_timestamp, max, col
+
 from requests import get
 
-# Definindo as constantes
-url = "https://data.boston.gov/datastore/odata3.0/4582bec6-2b4f-4f9e-bc55-cbaa73117f4c?$top=5&$format=json"
+# Strings de conexões
+url = 'https://data.boston.gov/api/3/action/datastore_search?resource_id=4582bec6-2b4f-4f9e-bc55-cbaa73117f4c'
 hdfs = "hdfs://elephant:8020/user/labdata/boston_food_establishment_inspections"
 
 # Inicializando a sessão do spark
@@ -34,7 +34,6 @@ spark.sparkContext.setLogLevel('ERROR')
 # Definindo a estrutura final dos dados
 schema = StructType([
     StructField('_id', IntegerType(), True),
-    StructField('businessname', StringType(), True),
     StructField('zip', StringType(), True),
     StructField('state', StringType(), True),
     StructField('resultdttm', StringType(), True),
@@ -62,17 +61,39 @@ schema = StructType([
     StructField('namelast', StringType(), True)
 ])
 
-# Conectando a url onde os dados estão disponíveis
-response = get(url)
+# Criando um dataframe vazio com o esquema criado acima
+df_empty = spark.createDataFrame([], schema)
 
-# Transformando os dados da url no formato JSON
-json_data = response.json()
+# Carregando os metadados da API
+metadados_json = get(url).json()
 
-# Criando um dataframe a partir do JSON
-df = spark.createDataFrame(json_data['value'], schema)
+# Carregando alguns metados da API em constantes
+limit = 5000
+maxInteractions = int(metadados_json['result']['total'] / limit + 1)
+offset = 0
+interaction = 0
+
+while (interaction <= maxInteractions):
+    # Carregando os dados da API em um dicionário
+    if (df_empty.count() == 0):
+        dados_json = get(url, params={'limit': limit}).json()
+        dados_json = dados_json['result']
+        dados_json = dados_json['records']
+    else:
+        dados_json = get(url, params={'limit': limit, 'offset': offset}).json()
+        dados_json = dados_json['result']
+        dados_json = dados_json['records']
+    # Criando um dataframe com o dicionário anteriormente criado
+    df_json = spark.createDataFrame(dados_json, schema)
+    # Adicionando os dados do dataframe no dataframe vazio anteriormente Criando
+    df_empty = df_empty.unionAll(df_json)
+    # Incrementando a interação
+    interaction += 1
+    # Incrementando o offset
+    offset = limit * interaction
 
 # Alterando os campos de datas para timestamp
-df = df\
+df = df_empty\
   .withColumn('resultdttm',  to_timestamp('resultdttm', 'yyyy-MM-dd HH:mm:ss')) \
   .withColumn('issdttm',  to_timestamp('issdttm', 'yyyy-MM-dd HH:mm:ss')) \
   .withColumn('violdttm',  to_timestamp('issdttm', 'yyyy-MM-dd HH:mm:ss')) \
@@ -82,8 +103,14 @@ df = df\
 df = df.repartition(10)
 
 # Gravar os dados no HDFS
+# df\
+#     .write\
+#     .mode("overwrite")\
+#     .option("path",hdfs)\
+#     .saveAsTable("boston_food_establishment_inspections")
+
 df\
     .write\
     .mode("overwrite")\
-    .option("path",hdfs)\
-    .saveAsTable("extract_boston_food_establishment_inspections")
+    .option("path",'/home/leandro/Documentos/pessoal/fia/acel_consulting/parquet_files/boston_food_establishment_inspections')\
+    .saveAsTable("boston_food_establishment_inspections")
