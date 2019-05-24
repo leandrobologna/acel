@@ -34,8 +34,7 @@ api_host = json_file['apiHost']
 api_client = json_file['client']
 api_key = json_file['key']
 
-location = "Boston, MA"
+state = "MA"
 
 # Carregando os dataframes
 active_establishment = spark.read.parquet("hdfs://elephant:8020/user/labdata/extract_boston_active_food_establishment")
-

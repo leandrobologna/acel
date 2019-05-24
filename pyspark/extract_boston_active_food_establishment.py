@@ -20,7 +20,8 @@ from requests import get
 
 # Definindo as constantes
 url = "https://data.boston.gov/api/3/action/datastore_search?resource_id=f1e13724-284d-478c-b8bc-ef042aa5b70b"
-hdfs = "hdfs://elephant:8020/user/labdata/boston_active_food_establishment"
+hdfs = "hdfs://elephant:8020/user/labdata/"
+local = "/home/leandro/Documentos/pessoal/fia/acel_consulting/parquet_files/"
 
 # Inicializando a sessão do spark
 spark = SparkSession \
@@ -29,6 +30,9 @@ spark = SparkSession \
    	.appName('extract_boston_active_food_establishment')\
    	.getOrCreate()
 spark.sparkContext.setLogLevel('ERROR')
+
+# Read tables
+df_empty = spark.read.parquet(local + 'boston_active_food_establishment')
 
 # Definindo a estrutura final dos dados (pensar em uma forma dinâmica)
 schema = StructType([
@@ -47,9 +51,6 @@ schema = StructType([
     StructField('CITY', StringType(), True),
     StructField('ZIP', StringType(), True)
 ])
-
-# Criando um dataframe vazio com o esquema criado acima
-df_empty = spark.createDataFrame([], schema)
 
 # Carregando os metadados da API
 metadados_json = get(url).json()
@@ -90,11 +91,11 @@ df = df.repartition(10)
 # df \
 # 	.write\
 # 	.mode("overwrite")\
-# 	.option("path", hdfs)\
+# 	.option("path", hdfs + 'boston_active_food_establishment')\
 # 	.saveAsTable("boston_active_food_establishment")
 
 df\
     .write\
     .mode("overwrite")\
-    .option("path",'/home/leandro/Documentos/pessoal/fia/acel_consulting/parquet_files/boston_active_food_establishment')\
+    .option("path",local + 'boston_active_food_establishment')\
     .saveAsTable("boston_active_food_establishment")

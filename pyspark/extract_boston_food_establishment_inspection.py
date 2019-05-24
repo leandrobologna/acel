@@ -20,7 +20,8 @@ from requests import get
 
 # Strings de conexões
 url = 'https://data.boston.gov/api/3/action/datastore_search?resource_id=4582bec6-2b4f-4f9e-bc55-cbaa73117f4c'
-hdfs = "hdfs://elephant:8020/user/labdata/boston_food_establishment_inspections"
+hdfs = "hdfs://elephant:8020/user/labdata/"
+local = "/home/leandro/Documentos/pessoal/fia/acel_consulting/parquet_files/"
 
 # Inicializando a sessão do spark
 spark = SparkSession \
@@ -30,6 +31,9 @@ spark = SparkSession \
     .getOrCreate()
 
 spark.sparkContext.setLogLevel('ERROR')
+
+# Read tables
+df_empty = spark.read.parquet(local + 'boston_food_establishment_inspections')
 
 # Definindo a estrutura final dos dados
 schema = StructType([
@@ -106,11 +110,11 @@ df = df.repartition(10)
 # df\
 #     .write\
 #     .mode("overwrite")\
-#     .option("path",hdfs)\
+#     .option("path",hdfs + 'boston_food_establishment_inspections')\
 #     .saveAsTable("boston_food_establishment_inspections")
 
 df\
     .write\
     .mode("overwrite")\
-    .option("path",'/home/leandro/Documentos/pessoal/fia/acel_consulting/parquet_files/boston_food_establishment_inspections')\
+    .option("path",local + 'boston_food_establishment_inspections')\
     .saveAsTable("boston_food_establishment_inspections")
