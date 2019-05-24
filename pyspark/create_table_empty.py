@@ -80,11 +80,11 @@ df_active = spark.createDataFrame([], schema_active)
 df_inspections \
     .write \
     .mode("overwrite")\
-    .option('path', local + 'boston_food_establishment_inspections')\
+    .option('path', hdfs + 'boston_food_establishment_inspections')\
     .saveAsTable('boston_food_establishment_inspections')
 
 df_active \
     .write \
     .mode("overwrite")\
-    .option('path', local + 'boston_active_food_establishment')\
+    .option('path', hdfs + 'boston_active_food_establishment')\
     .saveAsTable('boston_active_food_establishment')
