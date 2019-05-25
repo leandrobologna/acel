@@ -33,7 +33,7 @@ spark = SparkSession \
 spark.sparkContext.setLogLevel('ERROR')
 
 # Read tables
-df_empty = spark.read.parquet(local + 'boston_food_establishment_inspections')
+#df_empty = spark.read.parquet(local + 'boston_food_establishment_inspections')
 
 # Definindo a estrutura final dos dados
 schema = StructType([
@@ -64,6 +64,8 @@ schema = StructType([
     StructField('descript', StringType(), True),
     StructField('namelast', StringType(), True)
 ])
+
+df_empty = spark.createDataFrame([], schema)
 
 # Criando um dataframe vazio com o esquema criado acima
 df_empty = spark.createDataFrame([], schema)
@@ -107,14 +109,14 @@ df = df_empty\
 df = df.repartition(10)
 
 # Gravar os dados no HDFS
-# df\
-#     .write\
-#     .mode("overwrite")\
-#     .option("path",hdfs + 'boston_food_establishment_inspections')\
-#     .saveAsTable("boston_food_establishment_inspections")
-
 df\
     .write\
     .mode("overwrite")\
-    .option("path",local + 'boston_food_establishment_inspections')\
+    .option("path",hdfs + 'boston_food_establishment_inspections')\
     .saveAsTable("boston_food_establishment_inspections")
+
+#df\
+#    .write\
+#    .mode("overwrite")\
+#    .option("path",local + 'boston_food_establishment_inspections')\
+#    .saveAsTable("boston_food_establishment_inspections")
