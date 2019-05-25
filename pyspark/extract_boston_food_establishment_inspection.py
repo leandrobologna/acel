@@ -21,7 +21,7 @@ from requests import get
 # Strings de conexões
 url = 'https://data.boston.gov/api/3/action/datastore_search?resource_id=4582bec6-2b4f-4f9e-bc55-cbaa73117f4c'
 hdfs = "hdfs://elephant:8020/user/labdata/"
-local = "/home/leandro/Documentos/pessoal/fia/acel_consulting/parquet_files/"
+local = "/home/cbologna/Dropbox/GitHub/acel_consulting/parquet_files/"
 
 # Inicializando a sessão do spark
 spark = SparkSession \
@@ -38,6 +38,7 @@ spark.sparkContext.setLogLevel('ERROR')
 # Definindo a estrutura final dos dados
 schema = StructType([
     StructField('_id', IntegerType(), True),
+    StructField('businessname', StringType(), True),
     StructField('zip', StringType(), True),
     StructField('state', StringType(), True),
     StructField('resultdttm', StringType(), True),
@@ -109,14 +110,14 @@ df = df_empty\
 df = df.repartition(10)
 
 # Gravar os dados no HDFS
-df\
-    .write\
-    .mode("overwrite")\
-    .option("path",hdfs + 'boston_food_establishment_inspections')\
-    .saveAsTable("boston_food_establishment_inspections")
-
 #df\
 #    .write\
 #    .mode("overwrite")\
-#    .option("path",local + 'boston_food_establishment_inspections')\
+#    .option("path",hdfs + 'boston_food_establishment_inspections')\
 #    .saveAsTable("boston_food_establishment_inspections")
+
+df\
+    .write\
+    .mode("overwrite")\
+    .option("path",local + 'boston_food_establishment_inspections')\
+    .saveAsTable("boston_food_establishment_inspections")

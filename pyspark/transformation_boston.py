@@ -17,8 +17,8 @@ from pyspark.sql.functions import col, lag, datediff
 from pyspark.sql import Window
 
 # HDFS root directory
-#HDFS_SOURCE_FOLDER="file:///home/labdata/acel_consulting/parquet_files"
-HDFS_SOURCE_FOLDER = "hdfs://elephant:8020/user/labdata/"
+HDFS_SOURCE_FOLDER="file:///home/cbologna/Dropbox/GitHub/acel_consulting/parquet_files"
+#HDFS_SOURCE_FOLDER = "hdfs://elephant:8020/user/labdata/"
 
 # Spark session
 spark = SparkSession.builder \
@@ -29,6 +29,7 @@ spark = SparkSession.builder \
 
 # Read Parquet Data from HDFS
 establishment = spark.read.parquet('{0}/boston_active_food_establishment'.format(HDFS_SOURCE_FOLDER))
+
 inspections = spark.read.parquet('{0}/boston_food_establishment_inspections'.format(HDFS_SOURCE_FOLDER))
 
 # Last Inspection
@@ -38,6 +39,22 @@ inspections = inspections\
 	.withColumn('lastinspectiondt', lag('resultdttm').over(w))\
 	.withColumn('dayssincelastinspect', datediff(col('resultdttm'), col('lastinspectiondt')).cast('int'))\
 	.fillna(99999999)
+
+# Distinct
+inspections_distinct = inspections\
+    .select('licenseno', 'issdttm', 'expdttm', 'licstatus',
+        'licensecat', 'descript', 'city', 'zip', 'state', 'address', 'licstatus',
+        'licensecat', 'location')\
+    .distinct()
+
+inspections_distinct = inspections\
+    .select('property_id', 'city', 'zip', 'state', 'address')\
+    .distinct()
+
+
+
+
+
 
 # Groups
 inspections_count = inspections\
