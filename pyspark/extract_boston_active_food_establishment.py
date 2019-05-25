@@ -90,9 +90,9 @@ df = df_empty\
 df = df.repartition(10)
 
 # Gravar os dados no HDFS
- df \
- 	.write\
- 	.mode("overwrite")\
+df \
+   .write\
+	.mode("overwrite")\
  	.option("path", hdfs + 'boston_active_food_establishment')\
  	.saveAsTable("boston_active_food_establishment")
 
