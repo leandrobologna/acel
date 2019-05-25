@@ -13,7 +13,7 @@ boston_food_establishment_inspections
 
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, lag, datediff
+from pyspark.sql.functions import col, lag, datediff, row_number, lower, when, lit
 from pyspark.sql import Window
 
 # HDFS root directory
@@ -32,37 +32,36 @@ establishment = spark.read.parquet('{0}/boston_active_food_establishment'.format
 
 inspections = spark.read.parquet('{0}/boston_food_establishment_inspections'.format(HDFS_SOURCE_FOLDER))
 
-# Last Inspection
+# Data Cleanning
+inspections = inspections\
+    .withColumn('city', lower(col('city')))\
+    .withColumn('state', lower(col('state')))\
+    .withColumn('result', lower(col('result')))\
+    .withColumn('status',
+        when(
+            (col('result') == 'he_pass') |
+            (col('result') == 'passviol') |
+            (col('result') == 'pass'),
+        lit('pass')).otherwise(lit('fail')))
+
+
+# Inspections Number So Far (join with property_id and resultdttm)
 w = Window.partitionBy("property_id").orderBy("resultdttm")
 
-inspections = inspections\
-	.withColumn('lastinspectiondt', lag('resultdttm').over(w))\
-	.withColumn('dayssincelastinspect', datediff(col('resultdttm'), col('lastinspectiondt')).cast('int'))\
-	.fillna(99999999)
-
-# Distinct
 inspections_distinct = inspections\
-    .select('licenseno', 'issdttm', 'expdttm', 'licstatus',
-        'licensecat', 'descript', 'city', 'zip', 'state', 'address', 'licstatus',
-        'licensecat', 'location')\
-    .distinct()
-
-inspections_distinct = inspections\
-    .select('property_id', 'city', 'zip', 'state', 'address')\
-    .distinct()
-
-
-
-
-
-
-# Groups
-inspections_count = inspections\
-	.select('property_id', 'resultdttm')\
+	.select('property_id', 'issdttm', 'state', 'location', 'licensecat', 'descript', 'city', 'zip', 'resultdttm', 'status')\
 	.distinct()\
-	.groupBy('property_id')\
-	.count()\
-	.withColumnRenamed('count', 'inspections_count')
+	.withColumn('inspections_so_far', row_number().over(w))\
+    .withColumn('last_inspections', lag('resultdttm').over(w))\
+    .withColumn('days_since_last_inspect', datediff(col('resultdttm'), col('last_inspections')).cast('int'))\
+    .withColumn('last_status', lag('status').over(w))\
+    .fillna(99999999, subset = ['days_since_last_inspect']) \
+    .fillna('unknown', subset = ['last_status'])
+
+
+
+
+
 
 inspections_failled = inspections\
 	.filter(col('violstatus') == 'Fail')\
@@ -82,3 +81,10 @@ violation_count = inspections\
 	.withColumnRenamed('*', 'violationlevel_1')\
 	.withColumnRenamed('**', 'violationlevel_2')\
 	.withColumnRenamed('***', 'violationlevel_3')
+
+
+
+
+# Joins
+inspections_historic = inspections_stablishment\
+    .join(inspections_count, 'property_id', 'leftouter')
