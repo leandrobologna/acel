@@ -28,7 +28,7 @@ spark = SparkSession.builder \
     .getOrCreate()
 
 # Read Parquet Data from HDFS
-establishment = spark.read.parquet('{0}/boston_active_food_establishment'.format(HDFS_SOURCE_FOLDER))
+#establishment = spark.read.parquet('{0}/boston_active_food_establishment'.format(HDFS_SOURCE_FOLDER))
 
 inspections = spark.read.parquet('{0}/boston_food_establishment_inspections'.format(HDFS_SOURCE_FOLDER))
 
