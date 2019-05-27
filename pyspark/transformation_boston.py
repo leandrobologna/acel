@@ -70,4 +70,4 @@ inspections_historic = inspections_distinct\
     .withColumn('last_viol_pass', lag('viol_pass').over(w))\
     .fillna(99999999)
 
-inspections_historic.repartition(1).write.csv("{}train.csv".format(HDFS_SOURCE_FOLDER), sep=';')    
+inspections_historic.repartition(1).write.mode("overwrite").csv("{}/train_data".format(HDFS_SOURCE_FOLDER), sep=';', header = 'true')
