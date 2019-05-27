@@ -17,7 +17,7 @@ from pyspark.sql.functions import col, lag, datediff, row_number, lower, when, l
 from pyspark.sql import Window
 
 # HDFS root directory
-HDFS_SOURCE_FOLDER="file:///home/cbologna/Dropbox/GitHub/acel_consulting/parquet_files"
+HDFS_SOURCE_FOLDER="file:///home/carlos_bologna/Dropbox/GitHub/acel_consulting/parquet_files"
 #HDFS_SOURCE_FOLDER = "hdfs://elephant:8020/user/labdata/"
 
 # Spark session
@@ -34,57 +34,40 @@ inspections = spark.read.parquet('{0}/boston_food_establishment_inspections'.for
 
 # Data Cleanning
 inspections = inspections\
+    .filter(
+        (col('viollevel') != '1919') &
+        (col('property_id').isNull() == False) &
+        (col('violstatus') != ' '))\
     .withColumn('city', lower(col('city')))\
     .withColumn('state', lower(col('state')))\
     .withColumn('result', lower(col('result')))\
-    .withColumn('status',
-        when(
-            (col('result') == 'he_pass') |
-            (col('result') == 'passviol') |
-            (col('result') == 'pass'),
-        lit('pass')).otherwise(lit('fail')))
-
+    .fillna('viol_unknown', subset = ['violstatus'])
 
 # Inspections Number So Far (join with property_id and resultdttm)
 w = Window.partitionBy("property_id").orderBy("resultdttm")
 
 inspections_distinct = inspections\
-	.select('property_id', 'issdttm', 'state', 'location', 'licensecat', 'descript', 'city', 'zip', 'resultdttm', 'status')\
+	.select('property_id', 'issdttm', 'state', 'location', 'licensecat', 'descript', 'city', 'zip', 'resultdttm')\
 	.distinct()\
 	.withColumn('inspections_so_far', row_number().over(w))\
     .withColumn('last_inspections', lag('resultdttm').over(w))\
     .withColumn('days_since_last_inspect', datediff(col('resultdttm'), col('last_inspections')).cast('int'))\
-    .withColumn('last_status', lag('status').over(w))\
-    .fillna(99999999, subset = ['days_since_last_inspect']) \
-    .fillna('unknown', subset = ['last_status'])
+    .fillna(99999999, subset = ['days_since_last_inspect'])
 
-
-
-
-
-
-inspections_failled = inspections\
-	.filter(col('violstatus') == 'Fail')\
-	.select('property_id', 'resultdttm')\
-	.distinct()\
-	.groupBy('property_id')\
+violations = inspections\
+	.groupBy('property_id', 'resultdttm')\
+	.pivot('violstatus')\
 	.count()\
-	.withColumnRenamed('count', 'inspections_failled')
-
-violation_count = inspections\
-	.filter(col('viollevel').isin('*', '**', '***'))\
-	.groupBy('property_id', 'viollevel')\
-	.count()\
-	.groupBy('property_id')\
-	.pivot('viollevel')\
-	.sum('count')\
-	.withColumnRenamed('*', 'violationlevel_1')\
-	.withColumnRenamed('**', 'violationlevel_2')\
-	.withColumnRenamed('***', 'violationlevel_3')
-
-
-
+	.withColumnRenamed('Fail', 'viol_fail')\
+	.withColumnRenamed('Pass', 'viol_pass')
 
 # Joins
-inspections_historic = inspections_stablishment\
-    .join(inspections_count, 'property_id', 'leftouter')
+inspections_historic = inspections_distinct\
+    .join(violations, ['property_id', 'resultdttm'], 'leftouter')\
+    .fillna(0)\
+    .withColumn('fail', when(col('viol_fail') > 0, 1).otherwise(0))\
+    .withColumn('last_viol_fail', lag('viol_fail').over(w))\
+    .withColumn('last_viol_pass', lag('viol_pass').over(w))\
+    .fillna(99999999)
+
+inspections_historic.repartition(1).write.csv("{}train.csv".format(HDFS_SOURCE_FOLDER), sep=';')    
