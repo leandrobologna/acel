@@ -23,7 +23,7 @@ HDFS_SOURCE_FOLDER="file:///home/carlos_bologna/Dropbox/GitHub/acel_consulting/p
 # Spark session
 spark = SparkSession.builder \
     .config(conf=SparkConf()) \
-    .appName("refined_consulta_por_especialidade") \
+    .appName("transformation_boston") \
     .enableHiveSupport() \
     .getOrCreate()
 
