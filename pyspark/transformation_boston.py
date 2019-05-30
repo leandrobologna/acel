@@ -9,6 +9,13 @@ cidade de Boston (USA).
 Fonte:
 boston_active_food_establishment
 boston_food_establishment_inspections
+
+Para rodar:
+SHELL
+$SPARK_HOME/bin/pyspark --conf spark.hadoop.hive.metastore.uris=thrift://10.30.30.21:9083
+
+SUBMIT
+$SPARK_HOME/bin/spark-submit --master yarn --deploy-mode cluster /home/labdata/acel_consulting/pyspark/transformation_boston.py
 """
 
 from pyspark import SparkConf
@@ -17,13 +24,14 @@ from pyspark.sql.functions import col, lag, datediff, row_number, lower, when, l
 from pyspark.sql import Window
 
 # HDFS root directory
-HDFS_SOURCE_FOLDER="file:///home/carlos_bologna/Dropbox/GitHub/acel_consulting/parquet_files"
-#HDFS_SOURCE_FOLDER = "hdfs://elephant:8020/user/labdata/"
+#HDFS_SOURCE_FOLDER="file:///home/carlos_bologna/Dropbox/GitHub/acel_consulting/parquet_files"
+HDFS_SOURCE_FOLDER = "hdfs://elephant:8020/user/labdata/"
 
 # Spark session
 spark = SparkSession.builder \
     .config(conf=SparkConf()) \
-    .appName("refined_consulta_por_especialidade") \
+    .appName("transformation_boston") \
+    .config("hive.metastore.uris", "thrift://10.30.30.21:9083") \
     .enableHiveSupport() \
     .getOrCreate()
 
@@ -70,4 +78,10 @@ inspections_historic = inspections_distinct\
     .withColumn('last_viol_pass', lag('viol_pass').over(w))\
     .fillna(99999999)
 
-inspections_historic.repartition(1).write.mode("overwrite").csv("{}/train_data".format(HDFS_SOURCE_FOLDER), sep=';', header = 'true')
+#inspections_historic.repartition(1).write.mode("overwrite").csv("{}/train_data".format(HDFS_SOURCE_FOLDER), sep=';', header = 'true')
+
+inspections_historic\
+    .repartition(1) \
+    .write \
+    .mode("overwrite") \
+    .saveAsTable("inspections_historic")

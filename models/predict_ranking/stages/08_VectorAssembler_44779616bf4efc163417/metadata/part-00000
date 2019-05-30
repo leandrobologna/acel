@@ -1,0 +1,1 @@
+{"class":"org.apache.spark.ml.feature.VectorAssembler","timestamp":1559051230388,"sparkVersion":"2.2.1","uid":"VectorAssembler_44779616bf4efc163417","paramMap":{"outputCol":"features","inputCols":["inspections_so_far","days_since_last_inspect","last_viol_fail","last_viol_pass","licensecatVec","descriptVec","cityVec","zipVec"]}}
