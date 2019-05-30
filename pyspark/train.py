@@ -7,6 +7,13 @@ Script de treino do modelo preditivo.
 
 Fonte:
 Fonte de dados proveniente do script 'transformation_boston.py'
+
+Para rodar:
+SHELL
+$SPARK_HOME/bin/pyspark --conf spark.hadoop.hive.metastore.uris=thrift://10.30.30.21:9083
+
+SUBMIT
+$SPARK_HOME/bin/spark-submit --master yarn --deploy-mode cluster /home/labdata/acel_consulting/pyspark/train.py
 """
 
 from pyspark import SparkConf
@@ -18,18 +25,20 @@ from pyspark.ml.classification import RandomForestClassifier
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
 
 # HDFS root directory
-HDFS_SOURCE_FOLDER="file:///home/carlos_bologna/Dropbox/GitHub/acel_consulting/"
+#HDFS_SOURCE_FOLDER="file:///home/carlos_bologna/Dropbox/GitHub/acel_consulting/"
 #HDFS_SOURCE_FOLDER = "hdfs://elephant:8020/user/labdata/"
 
 # Spark session
 spark = SparkSession.builder \
     .config(conf=SparkConf()) \
     .appName("model") \
+    .config("hive.metastore.uris", "thrift://10.30.30.21:9083") \
     .enableHiveSupport() \
     .getOrCreate()
 
 # Read Parquet Data from HDFS
-inspections = spark.read.csv('{0}/{1}/train_data'.format(HDFS_SOURCE_FOLDER, 'parquet_files'), sep=';', header=True)
+#inspections = spark.read.csv('{0}/{1}/train_data'.format(HDFS_SOURCE_FOLDER, 'parquet_files'), sep=';', header=True)
+inspections = spark.table('inspections_historic')
 
 #Transformations
 inspections = inspections\

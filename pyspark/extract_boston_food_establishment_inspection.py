@@ -8,6 +8,14 @@ cidade de Boston (USA).
 
 Fonte:
 https://data.boston.gov/dataset/food-establishment-inspections
+
+Para rodar:
+SHELL
+$SPARK_HOME/bin/pyspark --conf spark.hadoop.hive.metastore.uris=thrift://10.30.30.21:9083
+
+SUBMIT
+$SPARK_HOME/bin/spark-submit --master yarn --deploy-mode cluster /home/labdata/acel_consulting/pyspark/extract_boston_food_establishment_inspection.py
+
 """
 
 # Importando os pacotes
