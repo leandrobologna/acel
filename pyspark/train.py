@@ -26,7 +26,7 @@ from pyspark.ml.evaluation import BinaryClassificationEvaluator
 
 # HDFS root directory
 #HDFS_SOURCE_FOLDER="file:///home/carlos_bologna/Dropbox/GitHub/acel_consulting/"
-#HDFS_SOURCE_FOLDER = "hdfs://elephant:8020/user/labdata/"
+HDFS_SOURCE_FOLDER = "hdfs://elephant:8020/user/labdata/"
 
 # Spark session
 spark = SparkSession.builder \
@@ -40,7 +40,7 @@ spark = SparkSession.builder \
 #inspections = spark.read.csv('{0}/{1}/train_data'.format(HDFS_SOURCE_FOLDER, 'parquet_files'), sep=';', header=True)
 inspections = spark.table('inspections_historic')
 
-#Transformations
+# Transformations
 inspections = inspections\
     .withColumn('inspections_so_far', col('inspections_so_far').cast('int'))\
     .withColumn('days_since_last_inspect', col('days_since_last_inspect').cast('int'))\
@@ -101,4 +101,4 @@ evaluator = BinaryClassificationEvaluator(rawPredictionCol="rawPrediction", labe
 evaluator.evaluate(predictions) #AUC
 
 # Save model
-model.save('{}/models/predict_ranking'.format(HDFS_SOURCE_FOLDER))
+model.write().overwrite().save('{}/models/predict_ranking'.format(HDFS_SOURCE_FOLDER))

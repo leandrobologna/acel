@@ -1,1 +1,0 @@
-{"class":"org.apache.spark.ml.feature.StringIndexerModel","timestamp":1559051229965,"sparkVersion":"2.2.1","uid":"StringIndexer_4b4ba5598da0bbeb9e24","paramMap":{"handleInvalid":"error","outputCol":"licensecatIndex","inputCol":"licensecat"}}

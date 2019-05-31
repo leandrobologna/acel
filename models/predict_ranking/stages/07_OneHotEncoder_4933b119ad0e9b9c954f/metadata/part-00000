@@ -1,0 +1,1 @@
+{"class":"org.apache.spark.ml.feature.OneHotEncoder","timestamp":1559325728770,"sparkVersion":"2.2.1","uid":"OneHotEncoder_4933b119ad0e9b9c954f","paramMap":{"dropLast":true,"inputCol":"zipIndex","outputCol":"zipVec"}}
