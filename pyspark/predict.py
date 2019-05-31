@@ -93,7 +93,7 @@ model = PipelineModel.load('{}/predict_ranking'.format(MODEL_SOURCE_FOLDER))
 predictions = model.transform(data)
 
 # Transformation
-firstelement=udf(lambda v:float(v[0]),FloatType())
+firstelement=udf(lambda v:float(v[1]),FloatType())
 
 predictions = predictions \
     .withColumn('proba', firstelement('probability')) \
