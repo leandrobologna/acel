@@ -24,11 +24,11 @@ Columns:
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, lower
-from pyspark.sql import Window
+from pyspark.sql import Window, Row
 from pyspark.sql.functions import row_number, current_date, datediff
 from pyspark.ml import PipelineModel
 from pyspark.sql.functions import udf
-from pyspark.sql.types import FloatType
+from pyspark.sql.types import StringType, FloatType
 
 # HDFS root directory
 HDFS_SOURCE_FOLDER = "hdfs://elephant:8020/user/labdata/"
@@ -47,8 +47,8 @@ spark = SparkSession.builder \
 # Read Parquet Data from HDFS
 establishment = spark.read.parquet('{0}/boston_active_food_establishment'.format(HDFS_SOURCE_FOLDER))
 
-#inspections_historic = spark.table('inspections_historic')
-inspections_historic = spark.read.csv('{0}/train_data'.format(HDFS_SOURCE_FOLDER), sep=';', header=True)
+inspections_historic = spark.table('inspections_historic')
+#inspections_historic = spark.read.csv('{0}/train_data'.format(HDFS_SOURCE_FOLDER), sep=';', header=True)
 
 # Drops
 inspections_historic = inspections_historic \
@@ -93,18 +93,36 @@ model = PipelineModel.load('{}/predict_ranking'.format(MODEL_SOURCE_FOLDER))
 predictions = model.transform(data)
 
 # Transformation
-firstelement=udf(lambda v:float(v[1]),FloatType())
+def getProba(v):
+    return str(v[1])
+   
 
-predictions = predictions \
-    .withColumn('proba', firstelement('probability')) \
+firstelement=udf(getProba, StringType())
+
+
+preds = predictions \
+    .withColumn('proba', firstelement(col('probability'))) \
     .drop('inspections_so_far', 'days_since_last_inspect', 'last_viol_fail',
-    'last_viol_pass', 'licensecatIndex', 'licensecatVec', 'descriptIndex',
-    'descriptVec', 'cityIndex', 'cityVec', 'zipIndex', 'zipVec', 'features',
-    'rawPrediction', 'probability', 'prediction',)
+        'last_viol_pass', 'licensecatIndex', 'licensecatVec', 'descriptIndex',
+        'descriptVec', 'cityIndex', 'cityVec', 'zipIndex', 'zipVec', 'features',
+        'rawPrediction', 'prediction', 'probability') 
+
 
 # Write
-predictions\
-    .repartition(1) \
+# predictions\
+#     .repartition(1) \
+#     .write \
+#     .mode("overwrite") \
+#     .saveAsTable("predict")
+
+#predictions\
+#   .write\
+#   .mode("overwrite")\
+#   .option("path",HDFS_SOURCE_FOLDER + 'predict')\
+#   .saveAsTable("predict")
+
+
+preds \
     .write \
     .mode("overwrite") \
     .saveAsTable("predict")

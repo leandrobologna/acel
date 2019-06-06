@@ -118,14 +118,14 @@ df = df_empty\
 df = df.repartition(10)
 
 # Gravar os dados no HDFS
-#df\
-#    .write\
-#    .mode("overwrite")\
-#    .option("path",hdfs + 'boston_food_establishment_inspections')\
-#    .saveAsTable("boston_food_establishment_inspections")
-
 df\
-    .write\
-    .mode("overwrite")\
-    .option("path",local + 'boston_food_establishment_inspections')\
-    .saveAsTable("boston_food_establishment_inspections")
+   .write\
+   .mode("overwrite")\
+   .option("path",hdfs + 'boston_food_establishment_inspections')\
+   .saveAsTable("boston_food_establishment_inspections")
+
+# df\
+#     .write\
+#     .mode("overwrite")\
+#     .option("path",hdfs + 'boston_food_establishment_inspections')\
+#     .saveAsTable("boston_food_establishment_inspections")
