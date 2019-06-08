@@ -20,7 +20,7 @@ $SPARK_HOME/bin/spark-submit --master yarn --deploy-mode cluster /home/labdata/a
 
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, lag, datediff, row_number, lower, when, lit
+from pyspark.sql.functions import col, lag, datediff, row_number, lower, when, lit, regexp_replace
 from pyspark.sql import Window
 
 # HDFS root directory
@@ -49,6 +49,10 @@ inspections = inspections\
     .withColumn('city', lower(col('city')))\
     .withColumn('state', lower(col('state')))\
     .withColumn('result', lower(col('result')))\
+    .withColumn('city', when(col('city').isNull(), lit('boston')).otherwise(col('city')))\
+    .withColumn('city', regexp_replace(col('city'), '\/', ''))\
+    .withColumn('city', regexp_replace(col('city'), '  ', ' '))\
+    .withColumn('zip', when(col('zip').isNull(), lit('02116')).otherwise(col('zip')))\
     .fillna('viol_unknown', subset = ['violstatus'])
 
 # Inspections Number So Far (join with property_id and resultdttm)

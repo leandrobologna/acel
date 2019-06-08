@@ -18,7 +18,7 @@ $SPARK_HOME/bin/spark-submit --master yarn --deploy-mode cluster /home/labdata/a
 
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, when, lit
+from pyspark.sql.functions import col, when, lit, regexp_replace
 from pyspark.ml.feature import OneHotEncoder, StringIndexer, VectorAssembler
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import RandomForestClassifier
@@ -47,7 +47,6 @@ inspections = inspections\
     .withColumn('last_viol_fail', col('last_viol_fail').cast('int'))\
     .withColumn('last_viol_pass', col('last_viol_pass').cast('int'))\
     .withColumn('fail', col('fail').cast('int'))\
-    .withColumn('city', when(col('city').isNull(), lit('boston')).otherwise(col('city')))\
     .withColumn('zip', when(col('zip').isNull(), lit('02116')).otherwise(col('zip')))
 
 # Drop Columns
@@ -56,21 +55,21 @@ inspections = inspections\
         'state', 'viol_fail', 'viol_pass')
 
 # Split Train and Test data
-train, test = inspections.randomSplit([0.7, 0.3], seed=1407)
+train, test = inspections.randomSplit([0.9, 0.1], seed=1407)
 
 train = train.fillna(0)
 
 # One Hot Enconde
-licensecatIndex = StringIndexer(inputCol="licensecat", outputCol="licensecatIndex")
+licensecatIndex = StringIndexer(inputCol="licensecat", outputCol="licensecatIndex", handleInvalid='keep')
 licensecatVec = OneHotEncoder(inputCol="licensecatIndex", outputCol="licensecatVec")
 
-descriptIndex = StringIndexer(inputCol="descript", outputCol="descriptIndex")
+descriptIndex = StringIndexer(inputCol="descript", outputCol="descriptIndex", handleInvalid='keep')
 descriptVec = OneHotEncoder(inputCol="descriptIndex", outputCol="descriptVec")
 
-cityIndex = StringIndexer(inputCol="city", outputCol="cityIndex")
+cityIndex = StringIndexer(inputCol="city", outputCol="cityIndex", handleInvalid='keep')
 cityVec = OneHotEncoder(inputCol="cityIndex", outputCol="cityVec")
 
-zipIndex = StringIndexer(inputCol="zip", outputCol="zipIndex")
+zipIndex = StringIndexer(inputCol="zip", outputCol="zipIndex", handleInvalid='keep')
 zipVec = OneHotEncoder(inputCol="zipIndex", outputCol="zipVec")
 
 feature_list = ['inspections_so_far', 'days_since_last_inspect',

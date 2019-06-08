@@ -19,13 +19,17 @@ $SPARK_HOME/bin/spark-submit --master yarn --deploy-mode cluster /home/labdata/a
 Columns:
 'licensecat', 'descript', 'city', 'zip', 'inspections_so_far', 'days_since_last_inspect', 'last_viol_fail', 'last_viol_pass'
 
+Comandos Uteis:
+$ sudo /home/labdata/cluster-conf-labdata/scripts/restart_all_services.sh
+$ sudo service hive-server2 status
+$ sudo service impala status
 """
 
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, lower
 from pyspark.sql import Window, Row
-from pyspark.sql.functions import row_number, current_date, datediff
+from pyspark.sql.functions import row_number, current_date, datediff, when, \
+    col, lower, regexp_replace, lit, trim
 from pyspark.ml import PipelineModel
 from pyspark.sql.functions import udf
 from pyspark.sql.types import StringType, FloatType
@@ -61,7 +65,15 @@ establishment = establishment\
     .withColumnRenamed('DESCRIPT', 'descript') \
     .withColumnRenamed('CITY', 'city') \
     .withColumnRenamed('ZIP', 'zip') \
-    .withColumn('city', lower(col('city')))
+    .withColumn('zip', when(col('zip').isNull(), lit('02116')).otherwise(col('zip')))\
+    .withColumn('city', lower(col('city')))\
+    .withColumn('city', regexp_replace(col('city'), '\/', ''))\
+    .withColumn('city', regexp_replace(col('city'), 'downtownfinancial', 'financial')) \
+    .withColumn('city', regexp_replace(col('city'), '  ', ' '))\
+    .withColumn('city', when(col('city') == '', lit('boston')).otherwise(col('city'))) \
+    .withColumn('city', when(col('city') == ' ', lit('boston')).otherwise(col('city')))
+    
+    
 
 # Window
 w = Window.partitionBy("property_id").orderBy(col("resultdttm").desc())
@@ -99,6 +111,7 @@ def getProba(v):
 
 firstelement=udf(getProba, StringType())
 
+#firstelement=udf(lambda x: float(x), FloatType())
 
 preds = predictions \
     .withColumn('proba', firstelement(col('probability'))) \
@@ -106,21 +119,6 @@ preds = predictions \
         'last_viol_pass', 'licensecatIndex', 'licensecatVec', 'descriptIndex',
         'descriptVec', 'cityIndex', 'cityVec', 'zipIndex', 'zipVec', 'features',
         'rawPrediction', 'prediction', 'probability') 
-
-
-# Write
-# predictions\
-#     .repartition(1) \
-#     .write \
-#     .mode("overwrite") \
-#     .saveAsTable("predict")
-
-#predictions\
-#   .write\
-#   .mode("overwrite")\
-#   .option("path",HDFS_SOURCE_FOLDER + 'predict')\
-#   .saveAsTable("predict")
-
 
 preds \
     .write \
