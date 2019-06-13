@@ -100,4 +100,4 @@ evaluator = BinaryClassificationEvaluator(rawPredictionCol="rawPrediction", labe
 evaluator.evaluate(predictions) #AUC
 
 # Save model
-model.write().overwrite().save('{}/models/predict_ranking'.format(HDFS_SOURCE_FOLDER))
+#model.write().overwrite().save('{}/models/predict_ranking'.format(HDFS_SOURCE_FOLDER))

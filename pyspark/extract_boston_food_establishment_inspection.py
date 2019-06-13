@@ -19,6 +19,8 @@ $SPARK_HOME/bin/spark-submit --master yarn --deploy-mode cluster /home/labdata/a
 """
 
 # Importando os pacotes
+DEMO=True
+
 from pyspark import SparkConf
 from pyspark.sql import SparkSession, Row
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType
@@ -84,7 +86,7 @@ metadados_json = get(url).json()
 
 # Carregando alguns metados da API em constantes
 limit = 5000
-maxInteractions = int(metadados_json['result']['total'] / limit + 1)
+maxInteractions = 3 if DEMO else int(metadados_json['result']['total'] / limit + 1)
 offset = 0
 interaction = 0
 
