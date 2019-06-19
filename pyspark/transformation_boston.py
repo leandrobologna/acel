@@ -88,4 +88,5 @@ inspections_historic\
     .repartition(1) \
     .write \
     .mode("overwrite") \
+    .option("path", HDFS_SOURCE_FOLDER + 'inspections_historic')\
     .saveAsTable("inspections_historic")
