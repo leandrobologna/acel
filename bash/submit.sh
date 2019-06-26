@@ -9,7 +9,7 @@ clear
 
 figlet "Extract :"
 echo
-pause "Pressione ENTER continuar"
+#pause "Pressione ENTER continuar"
 
 
 $SPARK_HOME/bin/spark-submit --master yarn --deploy-mode cluster /home/labdata/acel_consulting/pyspark/extract_boston_food_establishment_inspection.py
@@ -23,7 +23,7 @@ hdfs dfs -ls boston_active_food_establishment
 echo
 figlet "Transform :"
 echo
-pause "Pressione ENTER continuar"
+#pause "Pressione ENTER continuar"
 
 $SPARK_HOME/bin/spark-submit --master yarn --deploy-mode cluster /home/labdata/acel_consulting/pyspark/transformation_boston.py
 
@@ -32,7 +32,7 @@ beeline -u jdbc:hive2://elephant:10000 -n labdata -e "SELECT * FROM inspections_
 echo
 figlet "Predict :"
 echo
-pause "Pressione ENTER continuar"
+#pause "Pressione ENTER continuar"
 
 $SPARK_HOME/bin/spark-submit --master yarn --deploy-mode cluster /home/labdata/acel_consulting/pyspark/predict.py
 
